@@ -89,7 +89,9 @@ class ThreadRead extends Thread
 
                 include $_conf['sid2ch_php'];
                 $this->_downloadDat2chMaru($uaMona, $SID2ch);
-
+            // shiro=kuma
+            } elseif (P2Util::isHost2chs($this->host) && !empty($_GET['shiro'])) {
+                $this->_downloadDat2chMaru($uaMona, null);
             // 2ch bbspink モリタポ読み
             } elseif (P2Util::isHost2chs($this->host) && !empty($_GET['moritapodat']) &&
                       $_conf['p2_2ch_mail'] && $_conf['p2_2ch_pass'])
@@ -211,7 +213,6 @@ class ThreadRead extends Thread
         $body = '';
         $code = null;
         $start_here = false;
-
         while (!p2_stream_eof($fp, $timed_out)) {
 
             if ($start_here) {
@@ -276,7 +277,7 @@ class ThreadRead extends Thread
                 }
 
             } else {
-                $l = rtrim(fgets($fp, 32800), "\r\n");
+                $l = rtrim(fgets($fp), "\r\n");
                 // ex) HTTP/1.1 304 Not Modified
                 if (preg_match('@^HTTP/1\\.\\d (\\d+) (.+)@i', $l, $matches)) {
                     $code = $matches[1];
@@ -337,7 +338,6 @@ class ThreadRead extends Thread
                 }
             }
         }
-
         fclose($fp);
         if ($timed_out) {
             self::_pushInfoReadTimedOut($url);
@@ -385,11 +385,15 @@ class ThreadRead extends Thread
         }
 
         $method = 'GET';
-
+        $url = null;
         //  GET /test/offlaw.cgi?bbs=板名&key=スレッド番号&sid=セッションID HTTP/1.1
-        $url = "http://{$this->host}/test/offlaw.cgi/{$this->bbs}/{$this->key}/?raw=0.0&sid=";
-        $url .= rawurlencode($SID2ch);
-
+        if ($SID2ch !== null) {
+            $url = "http://{$this->host}/test/offlaw.cgi/{$this->bbs}/{$this->key}/?raw=0.0&sid=";
+            $url .= rawurlencode($SID2ch);
+        } else {
+            //$url = "http://{$this->host}/test/offlaw.cgi/{$this->bbs}/{$this->key}/?raw=0.0&sid=ERROR&shiro=kuma";
+            $url = "http://{$this->host}/test/offlaw2.so?shiro=kuma&bbs={$this->bbs}&key={$this->key}&sid=ERROR";
+        }
         $purl = parse_url($url); // URL分解
         if (isset($purl['query'])) { // クエリー
             $purl['query'] = '?'.$purl['query'];
@@ -476,6 +480,7 @@ class ThreadRead extends Thread
                     }
 
                     // クリーニング =====
+                    if ($SID2ch === null) break;
                     if ($marudatlines = FileCtl::file_read_lines($this->keydat)) {
                         $firstline = array_shift($marudatlines);
                         // チャンクとか
@@ -499,7 +504,7 @@ class ThreadRead extends Thread
                 // dat.gzはなかったと判断
                 } else {
                     fclose($fp);
-                    return $this->_downloadDat2chMaruNotFound();
+                    return $this->_downloadDat2chMaruNotFound($url, $SID2ch);
                 }
 
             // ヘッダの処理
@@ -518,7 +523,7 @@ class ThreadRead extends Thread
                         return '304 Not Modified';
                     } else {
                         fclose($fp);
-                        return $this->_downloadDat2chMaruNotFound();
+                        return $this->_downloadDat2chMaruNotFound($url, $SID2ch);
                     }
 
                 } elseif (preg_match('/^Content-Encoding: (?:x-)?gzip/i', $l)) {
@@ -546,7 +551,7 @@ class ThreadRead extends Thread
     /**
      * ●IDでの取得ができなかったときに呼び出される
      */
-    protected function _downloadDat2chMaruNotFound()
+    protected function _downloadDat2chMaruNotFound($url, $SID2ch)
     {
         global $_conf;
 
@@ -554,10 +559,16 @@ class ThreadRead extends Thread
         if (empty($_REQUEST['relogin2ch'])) {
             $_REQUEST['relogin2ch'] = true;
             return $this->downloadDat();
-        } else {
+        } elseif ($SID2ch !== null) {
             $remarutori_ht = " [<a href=\"{$_conf['read_php']}?host={$this->host}&amp;bbs={$this->bbs}&amp;key={$this->key}&amp;ls={$this->ls}&amp;maru=true&amp;relogin2ch=true{$_conf['k_at_a']}\">再取得を試みる</a>]";
             $moritori_ht = $this->_generateMoritapoDatLink();
             $this->getdat_error_msg_ht .= "<p>rep2 info: ●IDでのスレッド取得に失敗しました。{$remarutori_ht}{$moritori_ht}</p>";
+            $this->getdat_error_msg_ht .= "<p>$url でデータが取得できるか確かめて下さい。</p>";
+            $this->diedat = true;
+            return false;
+        } else {
+            $moritori_ht = $this->_generateMoritapoDatLink();
+            $this->getdat_error_msg_ht .= "<p>$url でデータが取得できるか確かめて下さい。</p>";
             $this->diedat = true;
             return false;
         }
@@ -800,6 +811,7 @@ class ThreadRead extends Thread
             $dat_response_status = "このスレッドは過去ログ倉庫に格納されています。";
             //if (file_exists($_conf['idpw2ch_php']) || file_exists($_conf['sid2ch_php'])) {
                 $marutori_ht = " [<a href=\"{$_conf['read_php']}?host={$this->host}&amp;bbs={$this->bbs}&amp;key={$this->key}&amp;ls={$this->ls}&amp;maru=true{$_conf['k_at_a']}\">●IDでrep2に取り込む</a>]";
+                $marutori_ht .= " [<a href=\"{$_conf['read_php']}?host={$this->host}&amp;bbs={$this->bbs}&amp;key={$this->key}&amp;ls={$this->ls}&amp;shiro=kuma{$_conf['k_at_a']}\">shiro=kumaでrep2に取り込む</a>]";
             //} else {
             //    $marutori_ht = " [<a href=\"login2ch.php\" target=\"subject\">●IDログイン</a>]";
             //}
