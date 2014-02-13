@@ -17,7 +17,7 @@ $_conf['expack.ic2.general.cacheuri'] = './ic';
 //  SQLite2:     'sqlite:///' . $_conf['db_dir'] . '/imgcache.sqlite'
 // 注1: username,password,databaseは実際のものと読み替える。
 // 注2: MySQL,PosrgreSQLでは予めデータベースを作っておく。
-$_conf['expack.ic2.general.dsn'] = "";
+$_conf['expack.ic2.general.dsn'] = "mysql://ic2_user:ic2_user@localhost:3306/ic2_db";
 
 // DBで使うテーブル名
 $_conf['expack.ic2.general.table'] = "imgcache";
@@ -38,7 +38,7 @@ $_conf['expack.ic2.general.automemo'] = 1;
 // gd, imagick は PHP の拡張モジュールを利用、ImageMagick は外部コマンドを利用
 // ImageMagickのバージョンを自動判定するようになったので
 // 明示的に"ImageMagick6"を指定しなくてもよい
-$_conf['expack.ic2.general.driver'] = "gd";
+$_conf['expack.ic2.general.driver'] = "ImageMagick";
 
 // JPEG to JPEG 変換に Epeg エクステンションを使う (off:0;on:1)
 // http://page2.xrea.jp/index.php#php_epeg

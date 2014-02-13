@@ -56,7 +56,7 @@ $_conf['expack.spm.enabled'] = 1; // (1)
 // {{{ アクティブモナー
 
 // AA 補正（off:0, on:1）
-$_conf['expack.am.enabled'] = 0; // (0)
+$_conf['expack.am.enabled'] = 1; // (0)
 
 // }}}
 // {{{ 入力支援
@@ -71,7 +71,7 @@ $_conf['expack.editor.with_aas'] = 0; // (0)
 // {{{ RSSリーダ
 
 // RSSリーダ（off:0, on:1）
-$_conf['expack.rss.enabled'] = 0; // (0)
+$_conf['expack.rss.enabled'] = 1; // (0)
 
 // 設定ファイルのパス
 $_conf['expack.rss.setting_path'] = $_conf['pref_dir'] . '/p2_rss.txt';
@@ -90,7 +90,7 @@ $_conf['expack.rss.with_imgcache'] = 0; // (0)
  */
 
 // ImageCache2（off:0, PCのみ:1, 携帯のみ:2, 両方:3）
-$_conf['expack.ic2.enabled'] = 0; // (0)
+$_conf['expack.ic2.enabled'] = 3; // (0)
 
 // 一時的なON/OFFの切替フラグを保存するファイルのパス
 $_conf['expack.ic2.switch_path'] = $_conf['pref_dir'] . '/ic2_switch.txt';
@@ -104,7 +104,7 @@ $_conf['expack.ic2.zip'] = 0; // (0)
 // {{{ AAS
 
 // AAS（off:0, on:1）
-$_conf['expack.aas.enabled'] = 0; // (0)
+$_conf['expack.aas.enabled'] = 1; // (0)
 
 //TrueTypeフォントのパス
 $_conf['expack.aas.font_path'] = P2_BASE_DIR . '/ttf/mona.ttf';
